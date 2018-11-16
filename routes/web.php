@@ -49,13 +49,14 @@ Route::post('/create', 'LinkController@store');
 //
 //
 Route::get('/upload/index', 'FileUploadController@index')->name('upload.index');
-Route::get('/encrypt', 'FileUploadController@encrypt')->name('encrypt');
-Route::get('/decrypt', 'FileUploadController@decrypt')->name('decrypt');
-Route::post('/encrypt', 'FileUploadController@storetest');
-//Route::post('/encrypt', 'FileUploadController@encrypt_RSA');
-Route::post('/decrypt', 'FileUploadController@decrypt_RSA');
 
-Route::get('/upload', 'FileUploadController@create')->name('upload');
-Route::post('/upload', 'FileUploadController@store');
+Route::get('/encrypt', 'EncryptController@encrypt_view');
+Route::post('/encrypt', 'EncryptController@upload');
+
+Route::get('/decrypt', 'DecryptController@decrypt_view');
+Route::post('/decrypt', 'DecryptController@upload');
+
+Route::get('/upload', 'UploadController@create')->name('upload');
+Route::post('/upload', 'UploadController@upload');
 //
 //
