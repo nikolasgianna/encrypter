@@ -12,49 +12,66 @@ class DecryptController extends Controller
         return view('decrypt');
     }
 
-    public function decrypt_AES(String $data_in, $encryption_key)
-    {
-        // $encryption_key = openssl_random_pseudo_bytes(64);
-        // Storage::put('/image/enc_key', $encryption_key);
-        // $iv   = openssl_random_pseudo_bytes(openssl_cipher_iv_length('aes-256-cbc'));
-        $iv = file_get_contents(storage_path().'/app/image/iv');
-        // $data = openssl_encrypt($data_in, 'aes-256-cbc', $encryption_key, 0, $iv);
-        $out  = openssl_decrypt($data_in, 'aes-256-cbc', $encryption_key, 0, $iv);
-        Storage::put('/image/out.png', $out);
-    }
 
     public function upload()
     {
         if (request()->has('textToUpload')) {
             request()->validate([
-         'textToUpload'      => 'required|string|min:1|max:750',
-         'textEncryptionKey' => 'required|string|min:2|max:128',
+         'textToUpload'          => 'required|string|min:1|max:750',
+         'textEncryptionKeyText' => 'required_without:textEncryptionKeyFile|string|nullable|max:128',
+         'textEncryptionKeyFile' => 'empty_with:textEncryptionKeyText|file|max:2048',
+         'textIVText'            => 'required_without:textIVFile|string|nullable|min:1|max:750',
+         'textIVFile'            => 'empty_with:textIVText|file|max:2048',
      ]);
+            // dd(request()->all());
+            $in = request()->textToUpload;
+            if (request()->textEncryptionKeyText == null) {
+                request()->textEncryptionKeyFile->store('image');
+                $enc_key = Storage::get('/image/'.request()->textEncryptionKeyFile->hashName());
+            } else {
+                $enc_key = request()->textEncryptionKeyText;
+            }
 
-            $in             = request()->textToUpload;
-            $encryption_key = request()->textEncryptionKey;
-            // $encryption_key = file_get_contents(storage_path().'/app/image/enc_key');
-            // self::decrypt_AES($in, $encryption_key);
-            // $encryption_key = openssl_random_pseudo_bytes(64);
-            // Storage::put('/image/enc_key', $encryption_key);
-            // $iv   = openssl_random_pseudo_bytes(openssl_cipher_iv_length('aes-256-cbc'));
-            $iv = file_get_contents(storage_path().'/app/image/iv');
-            // $data = openssl_encrypt($in, 'aes-256-cbc', $encryption_key, 0, $iv);
-            $out  = openssl_decrypt($in, 'aes-256-cbc', $encryption_key, 0, $iv);
+            if (request()->textIVText == null) {
+                request()->textIVFile->store('image');
+                $iv = Storage::get('/image/'.request()->textIVFile->hashName());
+            } else {
+                $iv = request()->textIVText;
+            }
+
+            $out  = openssl_decrypt($in, 'aes-256-cbc', $enc_key, 0, $iv);
             Storage::put('/image/out.txt', $out);
-            return response()->download(storage_path().'/app/image/out.txt', 'ecnrypted_image.txt')->deleteFileAfterSend();
+            return response()->download(storage_path().'/app/image/out.txt', 'ecnrypted_text.txt')->deleteFileAfterSend();
         }
 
         if (request()->has('fileToUpload')) {
             request()->validate([
-             // 'fileToUpload'      => 'required|mimes:jpeg,png,jpg,zip,pdf,doc,docx, enc|max:2048',
              'fileToUpload'      => 'required|file|max:2048',
-             'fileEncryptionKey' => 'required|string|min:2|max:128',
+             'fileEncryptionKeyText' => 'required_without:fileEncryptionKeyFile|string|nullable|max:128',
+             'fileEncryptionKeyFile'      => 'empty_with:fileEncryptionKeyText|file|max:2048',
+             'fileIVText'            => 'required_without:fileIVFile|string|nullable|min:1|max:750',
+             'fileIVFile'            => 'empty_with:fileIVText|file|max:2048',
          ]);
 
-            $in             = file_get_contents(request()->fileToUpload);
-            $encryption_key = request()->fileEncryptionKey;
-            self::decrypt_AES($in, $encryption_key);
+
+            request()->fileToUpload->store('image');
+            $in = Storage::get('/image/'.request()->fileToUpload->hashName());
+            if (request()->fileEncryptionKeyText == null) {
+                request()->fileEncryptionKeyFile->store('image');
+                $enc_key = Storage::get('/image/'.request()->fileEncryptionKeyFile->hashName());
+            } else {
+                $enc_key = request()->fileEncryptionKeyText;
+            }
+
+            if (request()->fileIVText == null) {
+                request()->fileIVFile->store('image');
+                $iv = Storage::get('/image/'.request()->fileIVFile->hashName());
+            } else {
+                $iv = request()->fileIVText;
+            }
+
+            $out  = openssl_decrypt($in, 'aes-256-cbc', $enc_key, 0, $iv);
+            Storage::put('/image/out.png', $out);
             return response()->download(storage_path().'/app/image/out.png', 'ecnrypted_image.png')->deleteFileAfterSend();
         }
     }
