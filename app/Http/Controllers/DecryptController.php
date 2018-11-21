@@ -12,67 +12,67 @@ class DecryptController extends Controller
         return view('decrypt');
     }
 
+    public function decrypt_text_view()
+    {
+        return view('decrypt_text');
+    }
 
-    public function upload()
+    public function decrypt_file_view()
+    {
+        return view('decrypt_file');
+    }
+
+    public function upload_text()
+    {
+        request()->validate([
+         'textToUpload'          => 'required|string|min:1|max:750',
+         'userEncryptionKeyText' => 'required_without:userEncryptionKeyFile|string|nullable|max:128',
+         // 'userEncryptionKeyFile' => 'empty_with:userEncryptionKeyText|file|max:2048',
+         'userEncryptionKeyFile' => 'file|max:2048',
+         'userIVText'            => 'required_without:userIVFile|string|nullable|min:1|max:750',
+         // 'userIVFile'            => 'empty_with:userIVText|file|max:2048',
+         'userIVFile'            => 'file|max:2048',
+      ]);
+        $request = request();
+        $this->handle_req($request);
+        return response()->download(storage_path().'/app/image/out', 'ecnrypted_text.txt')->deleteFileAfterSend();
+    }
+
+    public function upload_file()
+    {
+        request()->validate([
+       'fileToUpload'      => 'required|file|max:2048',
+       'userEncryptionKeyText' => 'required_without:userEncryptionKeyFile|string|nullable|max:128',
+       'userEncryptionKeyFile'      => 'empty_with:userEncryptionKeyText|file|max:2048',
+       'userIVText'            => 'required_without:userIVFile|string|nullable|min:1|max:750',
+       'userIVFile'            => 'empty_with:userIVText|file|max:2048',
+     ]);
+
+        $request = request();
+        $this->handle_req($request);
+        return response()->download(storage_path().'/app/image/out', 'ecnrypted_img.png')->deleteFileAfterSend();
+    }
+
+    public function handle_req(Request $request)
     {
         if (request()->has('textToUpload')) {
-            request()->validate([
-         'textToUpload'          => 'required|string|min:1|max:750',
-         'textEncryptionKeyText' => 'required_without:textEncryptionKeyFile|string|nullable|max:128',
-         'textEncryptionKeyFile' => 'empty_with:textEncryptionKeyText|file|max:2048',
-         'textIVText'            => 'required_without:textIVFile|string|nullable|min:1|max:750',
-         'textIVFile'            => 'empty_with:textIVText|file|max:2048',
-     ]);
-            // dd(request()->all());
             $in = request()->textToUpload;
-            if (request()->textEncryptionKeyText == null) {
-                request()->textEncryptionKeyFile->store('image');
-                $enc_key = Storage::get('/image/'.request()->textEncryptionKeyFile->hashName());
-            } else {
-                $enc_key = request()->textEncryptionKeyText;
-            }
-
-            if (request()->textIVText == null) {
-                request()->textIVFile->store('image');
-                $iv = Storage::get('/image/'.request()->textIVFile->hashName());
-            } else {
-                $iv = request()->textIVText;
-            }
-
-            $out  = openssl_decrypt($in, 'aes-256-cbc', $enc_key, 0, $iv);
-            Storage::put('/image/out.txt', $out);
-            return response()->download(storage_path().'/app/image/out.txt', 'ecnrypted_text.txt')->deleteFileAfterSend();
+        } elseif (request()->has('fileToUpload')) {
+            $in = file_get_contents(request()->fileToUpload);
+        }
+        if (request()->userEncryptionKeyText == null) {
+            $enc_key = file_get_contents(request()->userEncryptionKeyFile);
+        } else {
+            $enc_key = request()->userEncryptionKeyText;
         }
 
-        if (request()->has('fileToUpload')) {
-            request()->validate([
-             'fileToUpload'      => 'required|file|max:2048',
-             'fileEncryptionKeyText' => 'required_without:fileEncryptionKeyFile|string|nullable|max:128',
-             'fileEncryptionKeyFile'      => 'empty_with:fileEncryptionKeyText|file|max:2048',
-             'fileIVText'            => 'required_without:fileIVFile|string|nullable|min:1|max:750',
-             'fileIVFile'            => 'empty_with:fileIVText|file|max:2048',
-         ]);
-
-
-            request()->fileToUpload->store('image');
-            $in = Storage::get('/image/'.request()->fileToUpload->hashName());
-            if (request()->fileEncryptionKeyText == null) {
-                request()->fileEncryptionKeyFile->store('image');
-                $enc_key = Storage::get('/image/'.request()->fileEncryptionKeyFile->hashName());
-            } else {
-                $enc_key = request()->fileEncryptionKeyText;
-            }
-
-            if (request()->fileIVText == null) {
-                request()->fileIVFile->store('image');
-                $iv = Storage::get('/image/'.request()->fileIVFile->hashName());
-            } else {
-                $iv = request()->fileIVText;
-            }
-
-            $out  = openssl_decrypt($in, 'aes-256-cbc', $enc_key, 0, $iv);
-            Storage::put('/image/out.png', $out);
-            return response()->download(storage_path().'/app/image/out.png', 'ecnrypted_image.png')->deleteFileAfterSend();
+        if (request()->userIVText == null) {
+            $iv = file_get_contents(request()->userIVFile);
+        } else {
+            $iv = request()->userIVText;
         }
+
+        $out  = openssl_decrypt($in, 'aes-256-cbc', $enc_key, 0, $iv);
+        Storage::put('/image/out', $out);
     }
 }
