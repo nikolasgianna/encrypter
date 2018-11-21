@@ -22,35 +22,35 @@ class DecryptController extends Controller
         return view('decrypt_file');
     }
 
-    public function upload_text()
+    public function upload()
     {
-        request()->validate([
+        if (request()->has('textToUpload')) {
+            request()->validate([
          'textToUpload'          => 'required|string|min:1|max:750',
          'userEncryptionKeyText' => 'required_without:userEncryptionKeyFile|string|nullable|max:128',
-         // 'userEncryptionKeyFile' => 'empty_with:userEncryptionKeyText|file|max:2048',
          'userEncryptionKeyFile' => 'file|max:2048',
          'userIVText'            => 'required_without:userIVFile|string|nullable|min:1|max:750',
-         // 'userIVFile'            => 'empty_with:userIVText|file|max:2048',
          'userIVFile'            => 'file|max:2048',
+         'encOptions' => 'string|nullable|min:10|max:10',
+         'IVOptions' => 'string|nullable|min:10|max:10',
       ]);
+            $filename = 'ecnrypted_text.txt';
+        } elseif (request()->has('fileToUpload')) {
+            request()->validate([
+         'fileToUpload'      => 'required|file|max:2048',
+         'userEncryptionKeyText' => 'required_without:userEncryptionKeyFile|string|nullable|max:128',
+         'userEncryptionKeyFile'      => 'file|max:2048',
+         'userIVText'            => 'required_without:userIVFile|string|nullable|min:1|max:750',
+         'userIVFile'            => 'file|max:2048',
+         'encOptions' => 'string|nullable|min:10|max:10',
+         'IVOptions' => 'string|nullable|min:10|max:10',
+   ]);
+            $filename = 'ecnrypted_img.png';
+        }
+        // dd(request()->all());
         $request = request();
         $this->handle_req($request);
-        return response()->download(storage_path().'/app/image/out', 'ecnrypted_text.txt')->deleteFileAfterSend();
-    }
-
-    public function upload_file()
-    {
-        request()->validate([
-       'fileToUpload'      => 'required|file|max:2048',
-       'userEncryptionKeyText' => 'required_without:userEncryptionKeyFile|string|nullable|max:128',
-       'userEncryptionKeyFile'      => 'empty_with:userEncryptionKeyText|file|max:2048',
-       'userIVText'            => 'required_without:userIVFile|string|nullable|min:1|max:750',
-       'userIVFile'            => 'empty_with:userIVText|file|max:2048',
-     ]);
-
-        $request = request();
-        $this->handle_req($request);
-        return response()->download(storage_path().'/app/image/out', 'ecnrypted_img.png')->deleteFileAfterSend();
+        return response()->download(storage_path().'/app/image/out', $filename)->deleteFileAfterSend();
     }
 
     public function handle_req(Request $request)
@@ -60,16 +60,33 @@ class DecryptController extends Controller
         } elseif (request()->has('fileToUpload')) {
             $in = file_get_contents(request()->fileToUpload);
         }
-        if (request()->userEncryptionKeyText == null) {
-            $enc_key = file_get_contents(request()->userEncryptionKeyFile);
+
+        if (request()->userEncryptionKeyText != null) {
+            if (request()->userEncryptionKeyFile != null) {
+                if (request()->encOptions == 'manualText') {
+                    $enc_key = request()->userEncryptionKeyText;
+                } elseif (request()->encOptions == 'manualFile') {
+                    $enc_key = file_get_contents(request()->userEncryptionKeyFile);
+                }
+            } else {
+                $enc_key = request()->userEncryptionKeyText;
+            }
         } else {
-            $enc_key = request()->userEncryptionKeyText;
+            $enc_key = file_get_contents(request()->userEncryptionKeyFile);
         }
 
-        if (request()->userIVText == null) {
-            $iv = file_get_contents(request()->userIVFile);
+        if (request()->userIVText != null) {
+            if (request()->userIVFile != null) {
+                if (request()->IVOptions == 'manualText') {
+                    $iv = request()->userIVText;
+                } elseif (request()->IVOptions == 'manualFile') {
+                    $iv = file_get_contents(request()->userIVFile);
+                }
+            } else {
+                $iv = request()->userIVText;
+            }
         } else {
-            $iv = request()->userIVText;
+            $iv = file_get_contents(request()->userIVFile);
         }
 
         $out  = openssl_decrypt($in, 'aes-256-cbc', $enc_key, 0, $iv);

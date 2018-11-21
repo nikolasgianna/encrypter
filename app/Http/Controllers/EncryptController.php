@@ -25,31 +25,26 @@ class EncryptController extends Controller
         return view('encrypt_file');
     }
 
-    public function upload_text()
+    public function upload()
     {
-        request()->validate([
+        if (request()->has('textToUpload')) {
+            request()->validate([
            'textToUpload'      => 'required|string|min:1|max:750',
            'userEncryptionKeyText' => 'required_without_all:userEncryptionKeyFile,randomEncryptionKey|string|nullable|max:128',
-           'userEncryptionKeyFile' => 'empty_with:userEncryptionKeyText|file|max:2048',
+           'userEncryptionKeyFile' => 'file|max:2048',
            'randomEncryptionKey' => 'string|nullable|max:4',
+           'options' => 'string|nullable|min:4|max:10',
        ]);
-
-        $request = request();
-
-        $response = $this->zip_it($this->handle_req($request));
-        if (!is_null($response)) {
-            return $response;
+        } elseif (request()->has('fileToUpload')) {
+            request()->validate([
+            'fileToUpload' => 'required|mimes:jpeg,png,jpg,zip,pdf,doc,docx|max:2048',
+            'userEncryptionKeyText' => 'required_without_all:userEncryptionKeyFile,randomEncryptionKey|string|nullable|max:128',
+            'userEncryptionKeyFile' => 'file|max:2048',
+            'randomEncryptionKey' => 'string|nullable|max:4',
+            'options' => 'string|nullable|min:4|max:10',
+      ]);
         }
-    }
-
-    public function upload_file()
-    {
-        request()->validate([
-           'fileToUpload' => 'required|mimes:jpeg,png,jpg,zip,pdf,doc,docx|max:2048',
-           'userEncryptionKeyText' => 'required_without_all:userEncryptionKeyFile,randomEncryptionKey|string|nullable|max:128',
-           'userEncryptionKeyFile' => 'empty_with:userEncryptionKeyText|file|max:2048',
-           'randomEncryptionKey' => 'string|nullable|max:4',
-       ]);
+        // dd(request()->all());
         $request = request();
 
         $response = $this->zip_it($this->handle_req($request));
@@ -61,22 +56,35 @@ class EncryptController extends Controller
     public function handle_req(Request $request)
     {
         $store_enc = false;
+
         if (request()->has('textToUpload')) {
             $in = request()->textToUpload;
         } elseif (request()->has('fileToUpload')) {
             $in = file_get_contents(request()->fileToUpload);
         }
+
         if (request()->randomEncryptionKey != null) {
-            $store_enc = true;
-            $enc_key = openssl_random_pseudo_bytes(64);
-            Storage::put('/image/enc_key', $enc_key);
+            if (request()->options == 'auto') {
+                $store_enc = true;
+                $enc_key = openssl_random_pseudo_bytes(64);
+                Storage::put('/image/enc_key', $enc_key);
+            }
         } else {
-            if (request()->userEncryptionKeyText == null) {
-                $enc_key = file_get_contents(request()->userEncryptionKeyFile);
+            if (request()->userEncryptionKeyText != null) {
+                if (request()->userEncryptionKeyFile != null) {
+                    if (request()->options == 'manualText') {
+                        $enc_key = request()->userEncryptionKeyText;
+                    } elseif (request()->options == 'manualFile') {
+                        $enc_key = file_get_contents(request()->userEncryptionKeyFile);
+                    }
+                } else {
+                    $enc_key = request()->userEncryptionKeyText;
+                }
             } else {
-                $enc_key = request()->userEncryptionKeyText;
+                $enc_key = file_get_contents(request()->userEncryptionKeyFile);
             }
         }
+
         $this->encrypt_AES($in, $enc_key);
         return $store_enc;
     }
@@ -110,5 +118,4 @@ class EncryptController extends Controller
             return response()->download($filetopath, $zipFileName, $headers)->deleteFileAfterSend();
         }
     }
-
 }

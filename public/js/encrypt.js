@@ -1,37 +1,19 @@
-$("#fileUpload").on("submit", function(e) {
-    $('#fileEncryptionKeyText').val(document.getElementById("userEncryptionKeyText").value);
-    if (document.getElementById("auto").value != null) {
-        $('#randomTrueFile').val(document.getElementById("auto").value);
-    }
-});
 $("#textUpload").on("submit", function(e) {
-    $('#textEncryptionKeyText').val(document.getElementById("userEncryptionKeyText").value);
     if (document.getElementById("auto").value != null) {
-        $('#randomTrueText').val(document.getElementById("auto").value);
+        $('#randomEncryptionKey').val(document.getElementById("auto").value);
     }
 });
 
-$('#userEncryptionKeyFile').change(function() {
-
-    var $this_iv_file = $(this);
-    var $clone = $this_iv_file.clone();
-    $this_iv_file.attr('name', 'fileEncryptionKeyFile');
-    $this_iv_file.attr('id', 'fileEncryptionKeyFile');
-    $this_iv_file.attr('style', 'display: none;');
-    $this_iv_file.after($clone).appendTo('#enc_file_area');
-
-    var $this_enc_text = $(this),
-        $clone = $this_enc_text.clone();
-    $this_enc_text.attr('name', 'textEncryptionKeyFile');
-    $this_enc_text.attr('style', 'display: none;');
-    $this_enc_text.after($clone).appendTo('#enc_text_area');
-
+$("#fileToUpload").on("submit", function(e) {
+    if (document.getElementById("auto").value != null) {
+        $('#randomEncryptionKey').val(document.getElementById("auto").value);
+    }
 });
 
 $("#auto").change(function() {
     if ($(this).prop("checked") == true) {
 
-        $(this).val("TRUE");
+        $(this).val("auto");
         if ($('#encInputFile').is(":visible")) {
             $('#encInputFile').attr('style', 'pointer-events:none');
             $('#encInputFile').attr('style', 'opacity:0.4');
