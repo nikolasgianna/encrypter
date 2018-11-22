@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+ini_set('max_execution_time', 300);
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use phpseclib\Crypt\RSA;
 
 class DecryptController extends Controller
 {
@@ -29,10 +32,13 @@ class DecryptController extends Controller
          'textToUpload'          => 'required|string|min:1|max:750',
          'userEncryptionKeyText' => 'required_without:userEncryptionKeyFile|string|nullable|max:128',
          'userEncryptionKeyFile' => 'file|max:2048',
-         'userIVText'            => 'required_without:userIVFile|string|nullable|min:1|max:750',
+         'userIVText'            => 'required_without_all:userIVFile,encChoiceRSA|string|nullable|min:1|max:750',
          'userIVFile'            => 'file|max:2048',
          'encOptions' => 'string|nullable|min:10|max:10',
          'IVOptions' => 'string|nullable|min:10|max:10',
+         'encChoiceAES' => 'string|nullable|min:4|max:5',
+         'encChoiceRSA' => 'string|nullable|min:4|max:5',
+
       ]);
             $filename = 'ecnrypted_text.txt';
         } elseif (request()->has('fileToUpload')) {
@@ -40,10 +46,13 @@ class DecryptController extends Controller
          'fileToUpload'      => 'required|file|max:2048',
          'userEncryptionKeyText' => 'required_without:userEncryptionKeyFile|string|nullable|max:128',
          'userEncryptionKeyFile'      => 'file|max:2048',
-         'userIVText'            => 'required_without:userIVFile|string|nullable|min:1|max:750',
+         'userIVText'            => 'required_without_all:userIVFile,encChoiceRSA|string|nullable|min:1|max:750',
          'userIVFile'            => 'file|max:2048',
          'encOptions' => 'string|nullable|min:10|max:10',
          'IVOptions' => 'string|nullable|min:10|max:10',
+         'encChoiceAES' => 'string|nullable|min:4|max:5',
+         'encChoiceRSA' => 'string|nullable|min:4|max:5',
+
    ]);
             $filename = 'ecnrypted_img.png';
         }
@@ -75,21 +84,42 @@ class DecryptController extends Controller
             $enc_key = file_get_contents(request()->userEncryptionKeyFile);
         }
 
-        if (request()->userIVText != null) {
-            if (request()->userIVFile != null) {
-                if (request()->IVOptions == 'manualText') {
-                    $iv = request()->userIVText;
-                } elseif (request()->IVOptions == 'manualFile') {
-                    $iv = file_get_contents(request()->userIVFile);
-                }
-            } else {
-                $iv = request()->userIVText;
-            }
-        } else {
-            $iv = file_get_contents(request()->userIVFile);
+        if (request()->encChoiceRSA == true){
+          $out = $this->decrypt_RSA($in, $enc_key);
+        } elseif (request()->encChoiceAES == true) {
+          $out = $this->decrypt_AES($in, $enc_key);
         }
 
-        $out  = openssl_decrypt($in, 'aes-256-cbc', $enc_key, 0, $iv);
         Storage::put('/image/out', $out);
+    }
+
+    public function decrypt_AES($in, $enc_key)
+    {
+      if (request()->userIVText != null) {
+          if (request()->userIVFile != null) {
+              if (request()->IVOptions == 'manualText') {
+                  $iv = request()->userIVText;
+              } elseif (request()->IVOptions == 'manualFile') {
+                  $iv = file_get_contents(request()->userIVFile);
+              }
+          } else {
+              $iv = request()->userIVText;
+          }
+      } else {
+          $iv = file_get_contents(request()->userIVFile);
+      }
+
+      $out  = openssl_decrypt($in, 'aes-256-cbc', $enc_key, 0, $iv);
+      return $out;
+
+    }
+
+    public function decrypt_RSA($data, $publickey)
+    {
+        $rsa = new RSA();
+        $rsa->loadKey($publickey);
+
+        $out = $rsa->decrypt($data);
+        return $out;
     }
 }
