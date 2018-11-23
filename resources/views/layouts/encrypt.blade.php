@@ -14,6 +14,17 @@
     <div class="modal-body row">
         <div class="col-md-6 text-center">
             @yield('fileOrText')
+        <div class="btn-group btn-group-toggle" data-toggle="buttons">
+            <label class="btn btn-secondary active">
+                <input type="radio" name="encChoice" id="AES" value='AES' autocomplete="off" checked> AES
+            </label>
+            <label class="btn btn-secondary">
+                <input type="radio" name="encChoice" id="RSA" value='RSA' autocomplete="off"> RSA
+            </label>
+            <label class="btn btn-secondary">
+                <input type="radio" name="encChoice" id="SHA" value='SHA' autocomplete="off"> SHA
+            </label>
+        </div>
         </div>
         <div class="col-md-6 text-center">
 
@@ -38,12 +49,12 @@
             <div class="card" id="encInputText" style="display: none; pointer-events: none; opacity: 0.4;">
                 <div class="card-header">Encryption Key</div>
                 <div class="card-body">
-                    <textarea name="userEncryptionKeyText" id="userEncryptionKeyText" class="form-control" rows="5" cols="25"></textarea>
+                    <textarea name="userEncryptionKeyText" id="userEncryptionKeyText" class="form-control" rows="2" cols="25"></textarea>
                 </div>
             </div>
 
             {{-- Choose Input Source --}}
-            <div class="btn-group btn-group-toggle" data-toggle="buttons">
+            <div class="btn-group btn-group-toggle" data-toggle="buttons" id="options">
                 <label class="btn btn-secondary active">
                     <input type="radio" id="auto" name="options" value='auto' autocomplete="off" checked> Auto
                 </label>

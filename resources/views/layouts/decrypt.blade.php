@@ -14,6 +14,14 @@
     <div class="modal-body row">
         <div class="col-md-6 text-center">
             @yield('fileOrText')
+            <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                <label class="btn btn-secondary active">
+                    <input type="radio" name="encChoiceAES" id="AES" value='true' autocomplete="off" checked> AES
+                </label>
+                <label class="btn btn-secondary">
+                    <input type="radio" name="encChoiceRSA" id="RSA" value='false' autocomplete="off"> RSA
+                </label>
+            </div>
         </div>
         <div class="col-md-3 text-center">
             <div class="card" id="encInputFile">
@@ -37,7 +45,7 @@
                     <textarea name="userEncryptionKeyText" id="userEncryptionKeyText" class="form-control" rows="5" cols="25"></textarea>
                 </div>
             </div>
-            <div class="btn-group btn-group-toggle" data-toggle="buttons">
+            <div class="btn-group btn-group-toggle" data-toggle="buttons"id="encOptions">
                 <label class="btn btn-secondary active">
                     <input type="radio" name="encOptions" value="manualFile" id="encFile" autocomplete="off" checked>File
                 </label>
@@ -68,7 +76,7 @@
                     <textarea name="userIVText" id="userIVText" class="form-control" rows="5" cols="25"></textarea>
                 </div>
             </div>
-            <div class="btn-group btn-group-toggle" data-toggle="buttons">
+            <div class="btn-group btn-group-toggle" data-toggle="buttons" id="IVOptions">
                 <label class="btn btn-secondary active">
                     <input type="radio" name="IVOptions" value="manualFile" id="IVFile" autocomplete="off" checked>File
                 </label>
