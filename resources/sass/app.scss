@@ -6,9 +6,13 @@
 @import 'variables';
 
 // Bootstrap
+// @import '~bootstrap/scss/bootstrap';
+
+// @import '~startbootstrap-grayscale/scss/grayscale';
 @import '~bootstrap/scss/bootstrap';
 
 .navbar-laravel {
-  background-color: #fff;
+  // background-color: #ff0;
+  background-color:  #d31b1b;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
 }

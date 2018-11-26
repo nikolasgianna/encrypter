@@ -43,7 +43,7 @@ $("#AES").change(function() {
             $('#IvInputFile').attr('style', 'pointer-events:auto');
             $('#IvInputFile').attr('style', 'opacity:1.0');
         } else {
-          $('#IvInputText').attr('style', 'pointer-events:auto');
+            $('#IvInputText').attr('style', 'pointer-events:auto');
             $('#IvInputText').attr('style', 'opacity:1.0');
         }
         $('#IVOptions').attr('style', 'pointer-events:auto');
@@ -55,8 +55,8 @@ $("#AES").change(function() {
 $("#RSA").change(function() {
     if ($(this).prop("checked") == true) {
 
-      $(this).val('true');
-      $('#AES').val('false');
+        $(this).val('true');
+        $('#AES').val('false');
 
         if ($('#IvInputFile').is(":visible")) {
 

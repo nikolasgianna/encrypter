@@ -84,9 +84,9 @@ class DecryptController extends Controller
             $enc_key = file_get_contents(request()->userEncryptionKeyFile);
         }
 
-        if (request()->encChoiceRSA == true){
+        if (request()->encChoiceRSA == 'true'){
           $out = $this->decrypt_RSA($in, $enc_key);
-        } elseif (request()->encChoiceAES == true) {
+        } elseif (request()->encChoiceAES == 'true') {
           $out = $this->decrypt_AES($in, $enc_key);
         }
 
